@@ -107,7 +107,7 @@ def render_1bit_png_bytes(text, font_path, width, height, px_size=16, margin=0, 
 
     infos, positions, hb_face, hb_font = hb_shape(
         text, font_bytes, script='taml', lang='ta', direction='LTR',
-        upem=hb_face.upem, px_size=px_size
+        upem=ft_face.units_per_EM, px_size=px_size
     )
 
     # Compute baseline using FreeType size metrics
@@ -197,64 +197,63 @@ def render_multiline_text(text_lines, font_path, width, height, px_size=16, marg
     if not DEPENDENCIES_AVAILABLE:
         raise ImportError("Required dependencies (uharfbuzz, freetype-py) not available")
     
-    # Calculate line height
-    ft_face = freetype.Face(font_path)
-    ft_face.set_char_size(0, px_size * 64, 72, 72)
-    ascender = ft_face.size.ascender / 64.0
-    descender = ft_face.size.descender / 64.0
-    line_height = ascender - descender + line_spacing
+    font_bytes = load_font_bytes(font_path)
     
-    # Create canvas
+    # Initialize FreeType face once for metrics
+    ft_face_metrics = freetype.Face(font_path)
+    ft_face_metrics.set_char_size(0, px_size * 64, 72, 72)
+    ascender = ft_face_metrics.size.ascender / 64.0
+    descender = ft_face_metrics.size.descender / 64.0
+    line_height_calc = ascender - descender + line_spacing
+    
+    # Create main canvas
     canvas = np.zeros((height, width), dtype=np.uint8)
     
-    # Calculate starting Y position to center all lines vertically
-    total_text_height = len(text_lines) * line_height - line_spacing
-    start_y = (height - total_text_height) / 2.0
+    # Calculate total text height and starting Y to center all lines vertically
+    total_text_content_height = len(text_lines) * line_height_calc - line_spacing
+    start_y_overall = (height - total_text_content_height) / 2.0
     
     for i, line in enumerate(text_lines):
         if not line.strip():  # Skip empty lines
             continue
             
-        # Calculate Y position for this line
-        line_y = start_y + i * line_height
-        
-        # Render this line to a temporary canvas
-        line_canvas = np.zeros((height, width), dtype=np.uint8)
-        
-        font_bytes = load_font_bytes(font_path)
-        ft_face = freetype.Face(font_path)
-        ft_face.set_char_size(0, px_size * 64, 72, 72)
-
-        infos, positions, hb_face, hb_font = hb_shape(
+        # Shape each line independently
+        infos, positions, hb_face_line, hb_font_line = hb_shape(
             line, font_bytes, script='taml', lang='ta', direction='LTR',
-            upem=hb_face.upem, px_size=px_size
+            upem=ft_face_metrics.units_per_EM, px_size=px_size
         )
 
-        # Measure line advance
-        x_advance_total = 0.0
-        for pos in positions:
-            x_advance_total += pos.x_advance / 64.0
+        # FreeType face for rasterization for this line
+        ft_face_line_render = freetype.Face(font_path)
+        ft_face_line_render.set_char_size(0, px_size * 64, 72, 72)
 
-        # Calculate pen position for this line
+        # Measure shaped run advance for this line
+        x_advance_total_line = 0.0
+        for pos in positions:
+            x_advance_total_line += pos.x_advance / 64.0
+
+        # Calculate pen position for this line based on alignment
         if align == 'left':
             pen_x = margin
         elif align == 'right':
-            pen_x = max(margin, width - margin - x_advance_total)
+            pen_x = max(margin, width - margin - x_advance_total_line)
         else:  # center
-            pen_x = (width - x_advance_total) / 2.0
+            pen_x = (width - x_advance_total_line) / 2.0
             pen_x = max(margin, pen_x)
 
-        baseline = line_y + ascender
+        # Calculate baseline for the current line
+        current_line_y_offset = start_y_overall + i * line_height_calc
+        baseline = current_line_y_offset + ascender
 
-        # Render glyphs for this line
+        # Render glyphs for this line onto the main canvas
         for info, pos in zip(infos, positions):
             gid = info.codepoint
             x_advance = pos.x_advance / 64.0
             x_offset = pos.x_offset / 64.0
             y_offset = pos.y_offset / 64.0
 
-            ft_face.load_glyph(gid, freetype.FT_LOAD_RENDER | freetype.FT_LOAD_TARGET_MONO)
-            slot = ft_face.glyph
+            ft_face_line_render.load_glyph(gid, freetype.FT_LOAD_RENDER | freetype.FT_LOAD_TARGET_MONO)
+            slot = ft_face_line_render.glyph
             bmp = slot.bitmap
             glyph_img = unpack_mono_bitmap(bmp)
 
@@ -277,7 +276,7 @@ def render_multiline_text(text_lines, font_path, width, height, px_size=16, marg
 
             pen_x += x_advance
 
-    # Convert to PIL image
+    # Convert to PIL 1-bit image
     img = Image.new('1', (width, height))
     img.putdata((canvas.flatten() * 255).tolist())
     
@@ -526,7 +525,7 @@ with st.expander("📖 Instructions & Help"):
     
     This application uses:
     - **HarfBuzz** (via uharfbuzz) for proper Tamil text shaping
-    - **FreeType** (via freetype-py) for monochrome glyph rendering
+    - **FreeType** (via freetype-py) for font rendering
     - **1-bit PNG output** optimized for LED pixel grids
     - **Exact pixel mapping** for crisp display on LED panels
     """)
@@ -538,4 +537,5 @@ st.markdown("""
     Tamil LED Text Generator | Optimized for HD2020 and LED Display Panels
 </div>
 """, unsafe_allow_html=True)
+
 
