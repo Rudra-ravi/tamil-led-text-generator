@@ -11,9 +11,10 @@ Features:
 - 1-bit monochrome rendering with FreeType
 - Multiple alignment options (left, center, right)
 - Margin control
-- Font selection (Regular/Bold)
+- Font selection (Regular/Bold/Black/ExtraBold/Medium)
 - Custom dimensions for LED panels
 - Direct PNG download for HD2020 import
+- Text and background color selection
 """
 
 import streamlit as st
@@ -80,7 +81,11 @@ def unpack_mono_bitmap(ft_bitmap):
                 outy[byte_index * 8 + bit] = 1 if (b & mask) else 0
     return out
 
-def render_1bit_png_bytes(text, font_path, width, height, px_size=16, margin=0, align='center'):
+def hex_to_rgb(hex_color):
+    hex_color = hex_color.lstrip('#')
+    return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+
+def render_1bit_png_bytes(text, font_path, width, height, px_size=16, margin=0, align='center', text_color=(255, 255, 255), bg_color=(0, 0, 0)):
     """
     Render Tamil text as 1-bit PNG and return as bytes.
     
@@ -92,6 +97,8 @@ def render_1bit_png_bytes(text, font_path, width, height, px_size=16, margin=0, 
         px_size: Font size in pixels
         margin: Left/right margin in pixels
         align: Horizontal alignment ('left', 'center', 'right')
+        text_color: RGB tuple for text color
+        bg_color: RGB tuple for background color
     
     Returns:
         bytes: PNG image data
@@ -113,7 +120,6 @@ def render_1bit_png_bytes(text, font_path, width, height, px_size=16, margin=0, 
     # Compute baseline using FreeType size metrics
     ascender = ft_face.size.ascender / 64.0
     descender = ft_face.size.descender / 64.0
-    line_height = ft_face.size.height / 64.0
 
     # Measure shaped run advance
     x_advance_total = 0.0
@@ -168,16 +174,20 @@ def render_1bit_png_bytes(text, font_path, width, height, px_size=16, margin=0, 
 
         pen_x += x_advance
 
-    # Convert to PIL 1-bit image
-    img = Image.new('1', (width, height))
-    img.putdata((canvas.flatten() * 255).tolist())
+    # Convert to PIL image with specified colors
+    img = Image.new('RGB', (width, height), color=bg_color)
+    pixels = img.load()
+    for y in range(height):
+        for x in range(width):
+            if canvas[y, x] == 1:
+                pixels[x, y] = text_color
     
     # Convert to bytes
     buf = io.BytesIO()
     img.save(buf, format='PNG', optimize=True)
     return buf.getvalue()
 
-def render_multiline_text(text_lines, font_path, width, height, px_size=16, margin=0, align='center', line_spacing=2):
+def render_multiline_text(text_lines, font_path, width, height, px_size=16, margin=0, align='center', line_spacing=2, text_color=(255, 255, 255), bg_color=(0, 0, 0)):
     """
     Render multiple lines of Tamil text.
     
@@ -190,6 +200,8 @@ def render_multiline_text(text_lines, font_path, width, height, px_size=16, marg
         margin: Left/right margin in pixels
         align: Horizontal alignment ('left', 'center', 'right')
         line_spacing: Additional spacing between lines in pixels
+        text_color: RGB tuple for text color
+        bg_color: RGB tuple for background color
     
     Returns:
         bytes: PNG image data
@@ -276,9 +288,13 @@ def render_multiline_text(text_lines, font_path, width, height, px_size=16, marg
 
             pen_x += x_advance
 
-    # Convert to PIL 1-bit image
-    img = Image.new('1', (width, height))
-    img.putdata((canvas.flatten() * 255).tolist())
+    # Convert to PIL image with specified colors
+    img = Image.new('RGB', (width, height), color=bg_color)
+    pixels = img.load()
+    for y in range(height):
+        for x in range(width):
+            if canvas[y, x] == 1:
+                pixels[x, y] = text_color
     
     # Convert to bytes
     buf = io.BytesIO()
@@ -362,8 +378,11 @@ with st.sidebar:
     # Check for available fonts
     available_fonts = []
     font_files = {
-        "Noto Sans Tamil UI Regular": "NotoSansTamilUI-Regular.ttf",
-        "Noto Sans Tamil UI Bold": "NotoSansTamilUI-Bold.ttf"
+        "Noto Sans Tamil Regular": "fonts/NotoSansTamil-Regular.ttf",
+        "Noto Sans Tamil Medium": "fonts/NotoSansTamil-Medium.ttf",
+        "Noto Sans Tamil Bold": "fonts/NotoSansTamil-Bold.ttf",
+        "Noto Sans Tamil ExtraBold": "fonts/NotoSansTamil-ExtraBold.ttf",
+        "Noto Sans Tamil Black": "fonts/NotoSansTamil-Black.ttf",
     }
     
     for name, filename in font_files.items():
@@ -371,7 +390,7 @@ with st.sidebar:
             available_fonts.append((name, filename))
     
     if not available_fonts:
-        st.error("No Tamil font files found. Please ensure font files are in the app directory.")
+        st.error("No Tamil font files found. Please ensure font files are in the 'fonts/' directory.")
         st.stop()
     
     font_names = [name for name, _ in available_fonts]
@@ -380,6 +399,14 @@ with st.sidebar:
     
     font_size = st.slider("Font Size (pixels)", min_value=8, max_value=64, value=16, step=1)
     
+    # Color Options
+    st.subheader("Color Options")
+    text_color_hex = st.color_picker("Text Color", "#FFFFFF")
+    bg_color_hex = st.color_picker("Background Color", "#000000")
+    
+    text_color_rgb = hex_to_rgb(text_color_hex)
+    bg_color_rgb = hex_to_rgb(bg_color_hex)
+
     # Image Dimensions
     st.subheader("Image Dimensions")
     col1, col2 = st.columns(2)
@@ -444,13 +471,14 @@ with col2:
             if len(text_lines) == 1:
                 image_bytes = render_1bit_png_bytes(
                     text_lines[0], selected_font_path, width, height,
-                    px_size=font_size, margin=margin, align=alignment
+                    px_size=font_size, margin=margin, align=alignment,
+                    text_color=text_color_rgb, bg_color=bg_color_rgb
                 )
             else:
                 image_bytes = render_multiline_text(
                     text_lines, selected_font_path, width, height,
                     px_size=font_size, margin=margin, align=alignment,
-                    line_spacing=line_spacing
+                    line_spacing=line_spacing, text_color=text_color_rgb, bg_color=bg_color_rgb
                 )
             
             # Display image
@@ -462,7 +490,7 @@ with col2:
             st.image(
                 preview_img,
                 caption=f"Output: {width}×{height}px, 1-bit Monochrome (Preview scaled {preview_scale}x)",
-                use_column_width=True
+                use_container_width=True
             )
             
             # Download button
@@ -478,9 +506,11 @@ with col2:
             st.info(f"""
             **Image Details:**
             - Dimensions: {width} × {height} pixels
-            - Format: 1-bit Monochrome PNG
+            - Format: PNG
             - Font: {selected_font_name} ({font_size}px)
             - Alignment: {alignment.title()}
+            - Text Color: {text_color_hex}
+            - Background Color: {bg_color_hex}
             - File size: {len(image_bytes):,} bytes
             """)
             
@@ -490,52 +520,29 @@ with col2:
         st.info("Enter Tamil text to generate an image.")
 
 # Instructions and Help
-with st.expander("📖 Instructions & Help"):
-    st.markdown("""
-    ### How to Use
-    
-    1. **Enter Text**: Type Tamil text in the input field (single line or multiple lines)
-    2. **Configure**: Adjust font, size, dimensions, and alignment in the sidebar
-    3. **Preview**: View the generated image with scaling for better visibility
-    4. **Download**: Click "Download PNG" to save the 1-bit image
-    5. **Import to HD2020**: Use the downloaded PNG in an Image region (not Text region)
-    
-    ### HD2020 Import Steps
-    
-    1. Open HD2020 and create a new screen with exact dimensions
-    2. Add an **Image** region (not Text region) with the same pixel dimensions
-    3. Import the downloaded PNG file
-    4. Avoid resizing in HD2020 to maintain 1:1 pixel mapping
-    5. Configure your panel settings (scan type, mapping) before testing
-    6. Send the program to your LED controller
-    
-    ### Font Recommendations
-    
-    - **Noto Sans Tamil UI Regular**: Best for general LED display use
-    - **Noto Sans Tamil UI Bold**: Better visibility on larger panels or longer viewing distances
-    
-    ### Troubleshooting
-    
-    - **Broken vowel signs**: Ensure HarfBuzz dependencies are properly installed
-    - **Blurry edges**: This app generates true 1-bit images to prevent LED "sparkle"
-    - **Scrambled display**: Check your LED panel's scan rate and mapping settings in HD2020
-    - **Text cut off**: Increase image dimensions or reduce font size/margins
-    
-    ### Technical Details
-    
-    This application uses:
-    - **HarfBuzz** (via uharfbuzz) for proper Tamil text shaping
-    - **FreeType** (via freetype-py) for font rendering
-    - **1-bit PNG output** optimized for LED pixel grids
-    - **Exact pixel mapping** for crisp display on LED panels
-    """)
-
-# Footer
-st.markdown("---")
 st.markdown("""
-<div style="text-align: center; color: #666; padding: 1rem;">
-    Tamil LED Text Generator | Optimized for HD2020 and LED Display Panels
-</div>
-""", unsafe_allow_html=True)
+---
+## 💡 How to Use:
+
+1.  **Enter your Tamil text** in the input box. You can choose between single or multiple lines.
+2.  **Adjust Font Settings**: Select a font family and size.
+3.  **Choose Colors**: Pick your desired text and background colors.
+4.  **Set Dimensions**: Specify the width and height of your LED panel in pixels, or use a preset.
+5.  **Configure Layout**: Adjust alignment, margin, and line spacing.
+6.  **Preview**: See a scaled preview of your generated LED text.
+7.  **Download**: Click the "Download PNG" button to save your 1-bit image.
+
+## 🛠️ Technical Details:
+
+*   **HarfBuzz**: Ensures correct rendering of complex Tamil script features like conjuncts and vowel signs.
+*   **FreeType**: Used for high-quality monochrome glyph rasterization.
+*   **1-bit Output**: Generates images suitable for LED matrix displays, which typically use 1-bit color depth per pixel.
+
+""")
+
+st.markdown("""
+---
+**Note**: If you encounter rendering issues, ensure your text is valid Tamil and try adjusting font size or line spacing.
+""")
 
 
