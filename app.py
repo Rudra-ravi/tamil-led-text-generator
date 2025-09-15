@@ -384,8 +384,12 @@ with st.sidebar:
         "Noto Sans Tamil ExtraBold": "fonts/NotoSansTamil-ExtraBold.ttf",
         "Noto Sans Tamil Black": "fonts/NotoSansTamil-Black.ttf",
         "Catamaran Regular": "fonts/Catamaran-Regular.ttf",
+        "Catamaran Bold": "fonts/Catamaran-Bold.ttf",
         "Hind Madurai Regular": "fonts/HindMadurai-Regular.ttf",
+        "Hind Madurai Bold": "fonts/HindMadurai-Bold.otf",
         "Mukta Malar Regular": "fonts/MuktaMalar-Regular.ttf",
+        "Mukta Malar Bold": "fonts/MuktaMalar-Bold.ttf",
+        "Mukta Malar ExtraBold": "fonts/MuktaMalar-ExtraBold.ttf",
     }
     
     for name, filename in font_files.items():
@@ -404,11 +408,27 @@ with st.sidebar:
     
     # Color Options
     st.subheader("Color Options")
-    text_color_hex = st.color_picker("Text Color", "#FFFFFF")
+    color_schemes = {
+        "White": "#FFFFFF",
+        "Red": "#FF0000",
+        "Green": "#00FF00",
+        "Blue": "#0000FF",
+        "Yellow": "#FFFF00",
+        "Orange": "#FFA500",
+        "Purple": "#800080",
+        "Cyan": "#00FFFF",
+        "Magenta": "#FF00FF",
+    }
+    
+    selected_color_scheme_name = st.selectbox("Text Color Scheme", list(color_schemes.keys()))
+    text_color_hex = color_schemes[selected_color_scheme_name]
+    st.color_picker("Custom Text Color (overrides scheme)", text_color_hex)
+
     bg_color_hex = st.color_picker("Background Color", "#000000")
     
     text_color_rgb = hex_to_rgb(text_color_hex)
     bg_color_rgb = hex_to_rgb(bg_color_hex)
+
 
     # Image Dimensions
     st.subheader("Image Dimensions")
