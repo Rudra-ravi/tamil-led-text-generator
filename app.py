@@ -383,6 +383,9 @@ with st.sidebar:
         "Noto Sans Tamil Bold": "fonts/NotoSansTamil-Bold.ttf",
         "Noto Sans Tamil ExtraBold": "fonts/NotoSansTamil-ExtraBold.ttf",
         "Noto Sans Tamil Black": "fonts/NotoSansTamil-Black.ttf",
+        "Catamaran Regular": "fonts/Catamaran-Regular.ttf",
+        "Hind Madurai Regular": "fonts/HindMadurai-Regular.ttf",
+        "Mukta Malar Regular": "fonts/MuktaMalar-Regular.ttf",
     }
     
     for name, filename in font_files.items():
@@ -544,5 +547,4 @@ st.markdown("""
 ---
 **Note**: If you encounter rendering issues, ensure your text is valid Tamil and try adjusting font size or line spacing.
 """)
-
 
