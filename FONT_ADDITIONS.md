@@ -8,6 +8,7 @@ This update adds support for the following additional Tamil fonts with bold text
 1. **Tamil Sangam MN** (Regular, Bold)
 2. **Latha** (Regular, Bold)  
 3. **Brahma** (Regular, Bold)
+4. **DINAK** (14 variants: 00, 01, 05, 06, 07, 10, 12, 13, 14, 26, 33, 42, 53, 87)
 
 ## Enhanced Font System
 
@@ -27,7 +28,8 @@ Font Families:
 ├── Mukta Malar (Regular, Bold, ExtraBold)
 ├── Tamil Sangam MN (Regular, Bold)
 ├── Latha (Regular, Bold)
-└── Brahma (Regular, Bold)
+├── Brahma (Regular, Bold)
+└── DINAK (00, 01, 05, 06, 07, 10, 12, 13, 14, 26, 33, 42, 53, 87)
 ```
 
 ## Implementation Notes
