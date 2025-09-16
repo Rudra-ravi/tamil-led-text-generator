@@ -375,34 +375,66 @@ with st.sidebar:
     # Font Selection
     st.subheader("Font Settings")
     
-    # Check for available fonts
-    available_fonts = []
-    font_files = {
-        "Noto Sans Tamil Regular": "fonts/NotoSansTamil-Regular.ttf",
-        "Noto Sans Tamil Medium": "fonts/NotoSansTamil-Medium.ttf",
-        "Noto Sans Tamil Bold": "fonts/NotoSansTamil-Bold.ttf",
-        "Noto Sans Tamil ExtraBold": "fonts/NotoSansTamil-ExtraBold.ttf",
-        "Noto Sans Tamil Black": "fonts/NotoSansTamil-Black.ttf",
-        "Catamaran Regular": "fonts/Catamaran-Regular.ttf",
-        "Catamaran Bold": "fonts/Catamaran-Bold.ttf",
-        "Hind Madurai Regular": "fonts/HindMadurai-Regular.ttf",
-        "Hind Madurai Bold": "fonts/HindMadurai-Bold.otf",
-        "Mukta Malar Regular": "fonts/MuktaMalar-Regular.ttf",
-        "Mukta Malar Bold": "fonts/MuktaMalar-Bold.ttf",
-        "Mukta Malar ExtraBold": "fonts/MuktaMalar-ExtraBold.ttf",
+    # Font families with their weight variants
+    font_families = {
+        "Noto Sans Tamil": {
+            "Regular": "fonts/NotoSansTamil-Regular.ttf",
+            "Medium": "fonts/NotoSansTamil-Medium.ttf", 
+            "Bold": "fonts/NotoSansTamil-Bold.ttf",
+            "ExtraBold": "fonts/NotoSansTamil-ExtraBold.ttf",
+            "Black": "fonts/NotoSansTamil-Black.ttf"
+        },
+        "Catamaran": {
+            "Regular": "fonts/Catamaran-Regular.ttf",
+            "Bold": "fonts/Catamaran-Bold.ttf"
+        },
+        "Hind Madurai": {
+            "Regular": "fonts/HindMadurai-Regular.ttf",
+            "Bold": "fonts/HindMadurai-Bold.otf"
+        },
+        "Mukta Malar": {
+            "Regular": "fonts/MuktaMalar-Regular.ttf",
+            "Bold": "fonts/MuktaMalar-Bold.ttf",
+            "ExtraBold": "fonts/MuktaMalar-ExtraBold.ttf"
+        },
+        "Tamil Sangam MN": {
+            "Regular": "fonts/TamilSangamMN-Regular.ttf",
+            "Bold": "fonts/TamilSangamMN-Bold.ttf"
+        },
+        "Latha": {
+            "Regular": "fonts/Latha-Regular.ttf",
+            "Bold": "fonts/Latha-Bold.ttf"
+        },
+        "Brahma": {
+            "Regular": "fonts/Brahma-Regular.ttf",
+            "Bold": "fonts/Brahma-Bold.ttf"
+        }
     }
     
-    for name, filename in font_files.items():
-        if os.path.exists(filename):
-            available_fonts.append((name, filename))
+    # Check available font families
+    available_families = {}
+    for family_name, weights in font_families.items():
+        available_weights = {}
+        for weight_name, font_path in weights.items():
+            if os.path.exists(font_path):
+                available_weights[weight_name] = font_path
+        if available_weights:
+            available_families[family_name] = available_weights
     
-    if not available_fonts:
+    if not available_families:
         st.error("No Tamil font files found. Please ensure font files are in the 'fonts/' directory.")
         st.stop()
     
-    font_names = [name for name, _ in available_fonts]
-    selected_font_name = st.selectbox("Font Family", font_names)
-    selected_font_path = next(path for name, path in available_fonts if name == selected_font_name)
+    # Font family selection
+    family_names = list(available_families.keys())
+    selected_family = st.selectbox("Font Family", family_names)
+    
+    # Font weight selection
+    available_weights = list(available_families[selected_family].keys())
+    selected_weight = st.selectbox("Font Weight", available_weights)
+    
+    # Get the selected font path
+    selected_font_path = available_families[selected_family][selected_weight]
     
     font_size = st.slider("Font Size (pixels)", min_value=8, max_value=64, value=16, step=1)
     
@@ -530,7 +562,7 @@ with col2:
             **Image Details:**
             - Dimensions: {width} × {height} pixels
             - Format: PNG
-            - Font: {selected_font_name} ({font_size}px)
+            - Font: {selected_family} {selected_weight} ({font_size}px)
             - Alignment: {alignment.title()}
             - Text Color: {text_color_hex}
             - Background Color: {bg_color_hex}
