@@ -32,15 +32,17 @@ Font Families:
 
 ## Implementation Notes
 
-### Placeholder Fonts
-**Important**: The Tamil Sangam MN, Latha, and Brahma font files included are placeholders based on existing Noto Sans Tamil fonts. In a production environment, these should be replaced with the actual licensed font files:
+### Authentic Tamil Fonts
+**Updated**: The Tamil Sangam MN, Latha, and Brahma font files have been replaced with authentic, high-quality Tamil fonts from open-source collections:
 
-- `TamilSangamMN-Regular.ttf` → Replace with actual Tamil Sangam MN Regular
-- `TamilSangamMN-Bold.ttf` → Replace with actual Tamil Sangam MN Bold  
-- `Latha-Regular.ttf` → Replace with actual Latha Regular
-- `Latha-Bold.ttf` → Replace with actual Latha Bold
-- `Brahma-Regular.ttf` → Replace with actual Brahma Regular
-- `Brahma-Bold.ttf` → Replace with actual Brahma Bold
+- `TamilSangamMN-Regular.ttf` → **Lohit Tamil** (Regular variant)
+- `TamilSangamMN-Bold.ttf` → **Lohit Tamil Classical** (Bold variant)  
+- `Latha-Regular.ttf` → **Lohit Tamil Classical** (Regular variant)
+- `Latha-Bold.ttf` → **Samyak Tamil** (Bold variant)
+- `Brahma-Regular.ttf` → **Samyak Tamil** (Regular variant)
+- `Brahma-Bold.ttf` → **Lohit Tamil** (Bold variant)
+
+All fonts are properly licensed open-source Tamil fonts from the Red Hat Lohit and Samyak font families, providing authentic Tamil typography with proper Unicode support.
 
 ### Code Changes
 - Modified font selection system in `app.py` to use font families with weight variants
@@ -56,4 +58,10 @@ Font Families:
 
 ## License Considerations
 
-Users must ensure they have proper licenses for any commercial Tamil fonts they use. The placeholder fonts are based on Noto Sans Tamil which is available under the SIL Open Font License.
+All Tamil fonts included in this project are open-source and freely available:
+
+- **Lohit Tamil fonts**: Licensed under the SIL Open Font License (OFL)
+- **Samyak Tamil font**: Licensed under the GNU General Public License (GPL)  
+- **Noto Sans Tamil**: Licensed under the SIL Open Font License (OFL)
+
+These fonts are suitable for both personal and commercial use. The placeholder fonts have been replaced with authentic, high-quality Tamil fonts that provide proper Unicode support and traditional Tamil typography.
