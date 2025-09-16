@@ -408,6 +408,22 @@ with st.sidebar:
         "Brahma": {
             "Regular": "fonts/Brahma-Regular.ttf",
             "Bold": "fonts/Brahma-Bold.ttf"
+        },
+        "DINAK": {
+            "00": "fonts/DINAK-00.TTF",
+            "01": "fonts/DINAK-01.TTF",
+            "05": "fonts/DINAK-05.TTF",
+            "06": "fonts/DINAK-06.TTF",
+            "07": "fonts/DINAK-07.TTF",
+            "10": "fonts/DINAK-10.TTF",
+            "12": "fonts/DINAK-12.TTF",
+            "13": "fonts/DINAK-13.TTF",
+            "14": "fonts/DINAK-14.TTF",
+            "26": "fonts/DINAK-26.TTF",
+            "33": "fonts/DINAK-33.TTF",
+            "42": "fonts/DINAK-42.TTF",
+            "53": "fonts/DINAK-53.TTF",
+            "87": "fonts/DINAK-87.TTF"
         }
     }
     
